@@ -54,9 +54,15 @@ void MatureBlinds::loop() {
     }
   }
 
-  if (is_homing_ && stall_detected_) {
-    stall_detected_ = false;
-    end_homing_();
+  if (is_homing_) {
+    if (stall_detected_) {
+      ESP_LOGI(TAG, "STALL DETECTED");
+      stall_detected_ = false;
+      end_homing_();
+    } else if (ms - last_publish_time_ > 1000 || ms < last_publish_time_) {
+      last_publish_time_ = ms;
+      this->publish_state();
+    }
   }
 }
 
@@ -113,7 +119,7 @@ void MatureBlinds::control(const CoverCall &call) {
   }
 
   if (call.get_stop()) {
-    stepper_->stopMove();
+    stepper_->forceStop();
     this->position = get_current_position();
     this->publish_state();
   }
@@ -134,13 +140,17 @@ CoverOperation MatureBlinds::get_operation(float pos) {
 
 void MatureBlinds::start_homing_() {
   ESP_LOGD(TAG, "Start homing");
+  on_before_start_callback_.call();
+  
   stepper_->setCurrentPosition(999999);
   stepper_->setSpeedInUs(speed_ * 2);
+  this->current_operation = CoverOperation::COVER_OPERATION_OPENING;
   stepper_->moveTo(0);
 
   delay(1000);
   is_homing_ = true;
   stall_detected_ = false;
+  last_publish_time_ = 0;
   this->diag_pin_->attach_interrupt(this->diag_isr_, this, gpio::InterruptType::INTERRUPT_RISING_EDGE);
 }
 
@@ -156,6 +166,8 @@ void MatureBlinds::end_homing_() {
   this->current_operation = CoverOperation::COVER_OPERATION_IDLE;
   this->position = get_current_position();
   this->publish_state();
+
+  on_after_stop_callback_.call();
 }
 
 void MatureBlinds::init_driver_() {
