@@ -101,7 +101,6 @@ async def to_code(config):
     if CONF_INVERT_ROTATION in config:
         cg.add(var.set_invert_rotation(config[CONF_INVERT_ROTATION]))
 
-    cg.add_platformio_option("build_flags", "CONFIG_IDF_TARGET_ESP32", "1")
     cg.add_library("SPI", None)
     cg.add_library("teemuatlut/TMCStepper", "^0.7.3")
     cg.add_library("gin66/FastAccelStepper", "^0.33.4")
