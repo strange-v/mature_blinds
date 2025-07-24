@@ -103,7 +103,7 @@ async def to_code(config):
 
     cg.add_library("SPI", None)
     cg.add_library("teemuatlut/TMCStepper", "^0.7.3")
-    cg.add_library("gin66/FastAccelStepper", "^0.30.5")
+    cg.add_library("gin66/FastAccelStepper", "^0.33.4")
 
     for conf in config.get(CONF_ON_BEFORE_START, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
