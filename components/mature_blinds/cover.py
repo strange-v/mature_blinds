@@ -1,3 +1,4 @@
+# cover.py
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation, pins
@@ -27,7 +28,6 @@ AfterStopTrigger = mature_blinds_ns.class_("AfterStopTrigger", automation.Trigge
 HomeAction = mature_blinds_ns.class_("HomeAction", automation.Action)
 MoveDownAction = mature_blinds_ns.class_("MoveDownAction", automation.Action)
 
-
 CONF_EN_PIN = "en_pin"
 CONF_DIR_PIN = "dir_pin"
 CONF_STEP_PIN = "step_pin"
@@ -44,39 +44,29 @@ CONF_ON_BEFORE_START = "on_before_start"
 CONF_ON_AFTER_STOP = "on_after_stop"
 
 CONFIG_SCHEMA = cv.All(
-    cover.COVER_SCHEMA.extend(
-        {
-            cv.GenerateID(): cv.declare_id(MatureBlinds),
-            cv.Optional(CONF_EN_PIN): cv.int_,
-            cv.Required(CONF_DIR_PIN): cv.int_,
-            cv.Required(CONF_STEP_PIN): cv.int_,
-            cv.Required(CONF_DIAG_PIN): pins.internal_gpio_output_pin_schema,
-            cv.Required(CONF_R_SENSE): cv.float_,
-            cv.Required(CONF_ADDRESS): cv.int_,
-            cv.Required(CONF_RMS_CURRENT): cv.int_,
-            cv.Required(CONF_STALL_VALUE): cv.int_,
-            cv.Required(CONF_SPEED_IN_US): cv.int_,
-            cv.Required(CONF_ACCELERATION): cv.int_,
-            cv.Required(CONF_FULL_DISTANCE): cv.int_,
-            cv.Required(CONF_HOMING_GAP): cv.int_,
-            cv.Optional(CONF_INVERT_ROTATION): cv.boolean,
-            cv.Optional(CONF_ON_BEFORE_START): automation.validate_automation(
-                {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(BeforeStartTrigger),
-                }
-            ),
-            cv.Optional(CONF_ON_AFTER_STOP): automation.validate_automation(
-                {
-                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(AfterStopTrigger),
-                }
-            ),
-        }
-    )
-    .extend(uart.UART_DEVICE_SCHEMA)
-    .extend(cv.COMPONENT_SCHEMA),
+    cover.cover_schema(MatureBlinds).extend({
+        cv.Optional(CONF_EN_PIN): cv.int_,
+        cv.Required(CONF_DIR_PIN): cv.int_,
+        cv.Required(CONF_STEP_PIN): cv.int_,
+        cv.Required(CONF_DIAG_PIN): pins.internal_gpio_output_pin_schema,
+        cv.Required(CONF_R_SENSE): cv.float_,
+        cv.Required(CONF_ADDRESS): cv.int_,
+        cv.Required(CONF_RMS_CURRENT): cv.int_,
+        cv.Required(CONF_STALL_VALUE): cv.int_,
+        cv.Required(CONF_SPEED_IN_US): cv.int_,
+        cv.Required(CONF_ACCELERATION): cv.int_,
+        cv.Required(CONF_FULL_DISTANCE): cv.int_,
+        cv.Required(CONF_HOMING_GAP): cv.int_,
+        cv.Optional(CONF_INVERT_ROTATION): cv.boolean,
+        cv.Optional(CONF_ON_BEFORE_START): automation.validate_automation({
+            cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(BeforeStartTrigger),
+        }),
+        cv.Optional(CONF_ON_AFTER_STOP): automation.validate_automation({
+            cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(AfterStopTrigger),
+        }),
+    }).extend(uart.UART_DEVICE_SCHEMA).extend(cv.COMPONENT_SCHEMA),
     cv.only_with_arduino,
 )
-
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
@@ -88,8 +78,10 @@ async def to_code(config):
     cg.add(var.set_address(config[CONF_ADDRESS]))
     cg.add(var.set_dir_pin(config[CONF_DIR_PIN]))
     cg.add(var.set_step_pin(config[CONF_STEP_PIN]))
-    diag_pin = (await cg.gpio_pin_expression(config[CONF_DIAG_PIN]),)
+
+    diag_pin = await cg.gpio_pin_expression(config[CONF_DIAG_PIN])
     cg.add(var.set_diag_pin(diag_pin))
+
     cg.add(var.set_rms_current(config[CONF_RMS_CURRENT]))
     cg.add(var.set_stall_value(config[CONF_STALL_VALUE]))
     cg.add(var.set_speed(config[CONF_SPEED_IN_US]))
@@ -114,24 +106,18 @@ async def to_code(config):
         await automation.build_automation(trigger, [], conf)
 
 
-SIMPLE_ACTION_SCHEMA = maybe_simple_id(
-    {
-        cv.Required(CONF_ID): cv.use_id(MatureBlinds),
-    }
-)
-MOVE_DOWN_ACTION_SCHEMA = cv.Schema(
-    {
-        cv.GenerateID(): cv.use_id(MatureBlinds),
-        cv.Required(CONF_VALUE): cv.templatable(cv.int_),
-    }
-)
-
+SIMPLE_ACTION_SCHEMA = maybe_simple_id({
+    cv.Required(CONF_ID): cv.use_id(MatureBlinds),
+})
+MOVE_DOWN_ACTION_SCHEMA = cv.Schema({
+    cv.GenerateID(): cv.use_id(MatureBlinds),
+    cv.Required(CONF_VALUE): cv.templatable(cv.int_),
+})
 
 @automation.register_action("cover.home", HomeAction, SIMPLE_ACTION_SCHEMA)
 async def home_action_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     return cg.new_Pvariable(action_id, template_arg, paren)
-
 
 @automation.register_action("cover.move_down", MoveDownAction, MOVE_DOWN_ACTION_SCHEMA)
 async def move_down_action_to_code(config, action_id, template_arg, args):
