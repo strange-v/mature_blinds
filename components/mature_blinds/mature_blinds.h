@@ -107,7 +107,7 @@ template<typename... Ts> class HomeAction : public Action<Ts...> {
  public:
   HomeAction(MatureBlinds *parent) : parent_(parent) {}
 
-  void play(Ts... x) override { this->parent_->home(); }
+  void play(const Ts &...x) override { this->parent_->home(); }
 
  protected:
   MatureBlinds *parent_;
@@ -118,7 +118,7 @@ template<typename... Ts> class MoveDownAction : public Action<Ts...> {
   MoveDownAction(MatureBlinds *parent) : parent_(parent) {}
   TEMPLATABLE_VALUE(int32_t, value)
 
-  void play(Ts... x) {
+  void play(const Ts &...x) override {
     auto value = this->value_.value(x...);
     this->parent_->move_down(value);
   }
