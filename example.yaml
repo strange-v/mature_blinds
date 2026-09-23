@@ -82,6 +82,7 @@ cover:
     address: 0
     r_sense: 0.11
     rms_current: 50
+    hold_current: 0  # 0 = coils shorted (passive brake) at standstill instead of holding with current
     acceleration: 10000
     speed_in_us: 60
     stall_value: 0
@@ -113,6 +114,7 @@ cover:
     address: 1
     r_sense: 0.11
     rms_current: 50
+    hold_current: 0  # 0 = coils shorted (passive brake) at standstill instead of holding with current
     acceleration: 10000
     speed_in_us: 57
     stall_value: 0

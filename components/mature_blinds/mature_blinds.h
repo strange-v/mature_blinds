@@ -34,6 +34,7 @@ class MatureBlinds : public cover::Cover, public uart::UARTDevice, public Compon
   void set_step_pin(uint8_t v) { step_pin_ = v; };
   void set_diag_pin(InternalGPIOPin *pin) { diag_pin_ = pin; };
   void set_rms_current(uint16_t v) { rms_current_ = v; };
+  void set_hold_current(uint16_t v) { hold_current_ = v; };
   void set_stall_value(uint8_t v) { stall_value_ = v; };
   void set_speed(uint32_t v) { speed_ = v; };
   void set_acceleration(int32_t v) { acceleration_ = v; };
@@ -73,6 +74,7 @@ class MatureBlinds : public cover::Cover, public uart::UARTDevice, public Compon
   uint8_t step_pin_{0};
   InternalGPIOPin *diag_pin_;
   uint16_t rms_current_{0};
+  uint16_t hold_current_{0};
   uint8_t stall_value_{0};
   uint32_t speed_{0};
   int32_t acceleration_{0};

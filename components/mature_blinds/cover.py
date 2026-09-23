@@ -34,6 +34,7 @@ CONF_STEP_PIN = "step_pin"
 CONF_DIAG_PIN = "diag_pin"
 CONF_R_SENSE = "r_sense"
 CONF_RMS_CURRENT = "rms_current"
+CONF_HOLD_CURRENT = "hold_current"
 CONF_STALL_VALUE = "stall_value"
 CONF_SPEED_IN_US = "speed_in_us"
 CONF_INVERT_ROTATION = "invert_rotation"
@@ -52,6 +53,7 @@ CONFIG_SCHEMA = cv.All(
         cv.Required(CONF_R_SENSE): cv.float_,
         cv.Required(CONF_ADDRESS): cv.int_,
         cv.Required(CONF_RMS_CURRENT): cv.int_,
+        cv.Optional(CONF_HOLD_CURRENT, default=0): cv.int_,
         cv.Required(CONF_STALL_VALUE): cv.int_,
         cv.Required(CONF_SPEED_IN_US): cv.int_,
         cv.Required(CONF_ACCELERATION): cv.int_,
@@ -83,6 +85,7 @@ async def to_code(config):
     cg.add(var.set_diag_pin(diag_pin))
 
     cg.add(var.set_rms_current(config[CONF_RMS_CURRENT]))
+    cg.add(var.set_hold_current(config[CONF_HOLD_CURRENT]))
     cg.add(var.set_stall_value(config[CONF_STALL_VALUE]))
     cg.add(var.set_speed(config[CONF_SPEED_IN_US]))
     cg.add(var.set_acceleration(config[CONF_ACCELERATION]))

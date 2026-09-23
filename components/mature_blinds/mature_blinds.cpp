@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "mature_blinds.h"
 #include "esphome/core/log.h"
 
@@ -76,6 +78,7 @@ void MatureBlinds::dump_config() {
   ESP_LOGCONFIG(TAG, "  address: %d", address_);
   ESP_LOGCONFIG(TAG, "  r_sense: %.3f", r_sense_);
   ESP_LOGCONFIG(TAG, "  rms_current: %u", rms_current_);
+  ESP_LOGCONFIG(TAG, "  hold_current: %u%s", hold_current_, hold_current_ == 0 ? " (windings shorted at standstill)" : "");
   ESP_LOGCONFIG(TAG, "  acceleration: %d", acceleration_);
   ESP_LOGCONFIG(TAG, "  speed_in_us: %u", speed_);
   ESP_LOGCONFIG(TAG, "  stall_value: %u", stall_value_);
@@ -177,11 +180,21 @@ void MatureBlinds::init_driver_() {
 
   driver_->toff(2);
   driver_->blank_time(24);
-  driver_->rms_current(rms_current_);
   driver_->microsteps(32);
   driver_->pwm_autoscale(true);
   driver_->TCOOLTHRS(0xFFFFF);
   driver_->SGTHRS(stall_value_);
+
+  if (hold_current_ == 0) {
+    // IHOLD = 0 is required for FREEWHEEL to take effect at standstill.
+    // Short the coils via the low-side drivers for passive braking instead
+    // of leaving them open (which would let the cover free-fall).
+    driver_->rms_current(rms_current_, 0.0f);
+    driver_->freewheel(2);
+  } else {
+    driver_->rms_current(rms_current_, std::min(hold_current_, rms_current_) / (float) rms_current_);
+    driver_->freewheel(0);
+  }
 }
 
 void MatureBlinds::init_stepper_() {
